@@ -1,5 +1,23 @@
 def word_count(s):
-    # Implement me.
+    ignored_chars = [
+        '"', ':', ';', ',', '.', '-', '+', '=', 
+        '/', '\\', '|', '[', ']', '{', '}', '(',
+         ')', '*', '^', '&'
+    ]
+    counts = dict()
+    for word in s.split():
+        word = word.lower()
+        for char in ignored_chars:
+            word = word.replace(char, '')
+        if len(word) == 0:
+            return counts
+        if counts.get(word):
+            counts[word] += 1
+        else:
+            counts[word] = 1
+    return counts
+        
+        
 
 
 if __name__ == "__main__":

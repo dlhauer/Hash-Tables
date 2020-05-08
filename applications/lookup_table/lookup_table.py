@@ -1,13 +1,17 @@
 import math
 import random
 
+lookup = dict()
+
 def slowfun(x, y):
-    # TODO: Modify to produce the same results, but much faster
+    v = lookup.get((x, y))
+    if v:
+        return v
     v = math.pow(x, y)
     v = math.factorial(v)
     v //= (x + y)
     v %= 982451653
-
+    lookup[(x,y)] = v
     return v
 
 

@@ -1,7 +1,6 @@
+import math
+
 class HashTableEntry:
-    """
-    Hash Table entry, as a linked list node.
-    """
 
     def __init__(self, key, value):
         self.key = key
@@ -10,12 +9,12 @@ class HashTableEntry:
 
 
 class HashTable:
-    """
-    A hash table that with `capacity` buckets
-    that accepts string keys
 
-    Implement this.
-    """
+    def __init__(self, capacity, min_capacity=None):
+        self.capacity = capacity
+        self.storage = [None] * self.capacity
+        self.item_count = 0
+        self.min_capacity = min_capacity if min_capacity else 8
 
     def fnv1(self, key):
         """
@@ -25,54 +24,99 @@ class HashTable:
         """
 
     def djb2(self, key):
-        """
-        DJB2 32-bit hash function
+        hash_int = 5381
+        byte_arr = key.encode()
 
-        Implement this, and/or FNV-1.
-        """
+        for byte in byte_arr:
+            hash_int = ((hash_int * 33) ^ byte) % 0x100000000
+        
+        return hash_int
 
     def hash_index(self, key):
-        """
-        Take an arbitrary key and return a valid integer index
-        between within the storage capacity of the hash table.
-        """
-        #return self.fnv1(key) % self.capacity
         return self.djb2(key) % self.capacity
 
     def put(self, key, value):
-        """
-        Store the value with the given key.
-
-        Hash collisions should be handled with Linked List Chaining.
-
-        Implement this.
-        """
-
+      
+        key_hash = self.hash_index(key)
+        entry = HashTableEntry(key, value)
+        added = False
+        if self.storage[key_hash] is None:
+            self.storage[key_hash] = entry
+            added = True
+        else:
+            node = self.storage[key_hash]
+            while node:
+                if node.key == key:
+                    node.value = value
+                    return
+                prev = node
+                node = node.next
+            prev.next = entry
+            added = True
+        if added:
+            self.item_count += 1
+            self.get_load_factor()
+            
     def delete(self, key):
-        """
-        Remove the value stored with the given key.
 
-        Print a warning if the key is not found.
-
-        Implement this.
-        """
+        deleted = False
+        warning = 'Given key does not exist in table.'
+        key_hash = self.hash_index(key)
+        if not self.storage[key_hash]:
+            print(warning)
+            return None
+        node = self.storage[key_hash]
+        if node.key == key:
+            self.storage[key_hash] = node.next
+            deleted = True
+        else:
+            prev = node
+            cur = node.next
+            while cur:
+                if cur.key == key:
+                    prev.next = cur.next
+                    deleted = True
+                    break
+                cur = cur.next
+        if deleted:
+            self.item_count -= 1
+            self.get_load_factor()
+        else:
+            print(warning)
+        return None
 
     def get(self, key):
-        """
-        Retrieve the value stored with the given key.
 
-        Returns None if the key is not found.
+        key_hash = self.hash_index(key)
+        if self.storage[key_hash] is not None:
+            node = self.storage[key_hash]
+            while node:
+                if node.key == key:
+                    return node.value
+                node = node.next
+            return None
+        else:
+            return None
 
-        Implement this.
-        """
+    def resize(self, factor=None):
 
-    def resize(self):
-        """
-        Doubles the capacity of the hash table and
-        rehash all key/value pairs.
+        factor = factor if factor else 2
+        self.capacity = math.ceil(self.capacity * factor)
+        new_storage = [None] * self.capacity
+        for node in self.storage:
+            while node:
+                key_hash = self.hash_index(node.key)
+                new_storage[key_hash] = node
+                node = node.next
+        self.storage = new_storage
 
-        Implement this.
-        """
+    def get_load_factor(self):
+
+        load_factor =  self.item_count / self.capacity
+        if load_factor >= 0.7:
+            self.resize(2)
+        elif load_factor <= 0.2 and self.capacity >= self.min_capacity * 2:
+            self.resize(0.5)
 
 if __name__ == "__main__":
     ht = HashTable(2)
